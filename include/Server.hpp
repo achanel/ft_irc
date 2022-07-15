@@ -2,22 +2,26 @@
 
 #include <iostream>
 #include <sys/types.h>
-#include <unistd.h>
 #include <sys/socket.h>
-#include <sys/epoll.h>
+#include <sys/poll.h>
 #include <netdb.h>
 #include <arpa/inet.h>
-#include <string.h>
 #include <string>
+# include <map>
+# include "Client.hpp"
+# include <fcntl.h>
+# include <unistd.h>
+
+# define BUFFER_SIZE	512
+# define MAX_EVENTS		10
 
 class Server {
     private:
-		int			_port;
-		std::string	_password;
-		int			_serverFD;
-		// int			_chanelID;
-		// int			_listening;
-		// int			_countConnections;
+		int				_port;
+		std::string		_password;
+		int				_serverFD;
+		struct pollfd	_fds[MAX_EVENTS];
+		int				_connections;
 
 	public:
 		Server();
@@ -29,12 +33,14 @@ class Server {
 		void	start();
 		void	stop();
 
+		void	initPoll(void);
 		void	initServer(void);
-		void	initEpoll(void);
 		void	mainLoop(void);
-		void	acceptClient(void);
-		void	handleClient(int fd);
+
+		void	setNewConnection(size_t &i);
+		void	continueConnection(size_t &i);
 		void	removeServer(void);
+
 		void	error(const char* error);
 
 

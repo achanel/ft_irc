@@ -1,6 +1,7 @@
 NAME = ircserv
 
-SRCS = main.cpp Server.cpp
+SRCS = main.cpp \
+		Server.cpp
 
 INCS = Server.hpp
 
@@ -10,16 +11,16 @@ DEPS = $(wildcard objs/*.d)
 
 CXX = c++
 
-CFLAGS = -Wall -Wextra -Werror -std=c++98
+CFLAGS = -Wall -Wextra -Werror -std=c++98 -g
 
-objs/%.o:	srcs/%.cpp
+objs/%.o:	src/%.cpp
 			@ [ -d objs ] || mkdir -p objs
-			$(CXX) $(CFLAGS) -MMD -c $< -o $@ -I./includes
+			$(CXX) $(CFLAGS) -MMD -c $< -o $@ -I./include
 
 $(NAME):	$(OBJS)
 			$(CXX) -o $@ $^ -fsanitize=address
 
-all: 		$(NAME)
+all:		$(NAME)
 
 clean:
 			$(RM)r $(OBJS) $(DEPS) objs

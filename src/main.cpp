@@ -9,6 +9,5 @@ int main(int ac, char** av) {
 
     Server Server(atoi(av[1]), std::string(av[2]));
     Server.start();
-    
     return 0;
 }
