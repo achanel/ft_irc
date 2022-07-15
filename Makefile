@@ -1,9 +1,8 @@
 NAME = ircserv
 
-SRCS = main.cpp \
-		Server.cpp
+SRCS = main.cpp Server.cpp Client.cpp
 
-INCS = Server.hpp
+INCS = Server.hpp Client,hpp
 
 OBJS = $(addprefix objs/, $(SRCS:.cpp=.o))
 

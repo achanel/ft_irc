@@ -11,17 +11,20 @@
 # include "Client.hpp"
 # include <fcntl.h>
 # include <unistd.h>
+#include <string.h>
 
 # define BUFFER_SIZE	512
 # define MAX_EVENTS		10
 
 class Server {
     private:
-		int				_port;
-		std::string		_password;
-		int				_serverFD;
-		struct pollfd	_fds[MAX_EVENTS];
-		int				_connections;
+		int						_port;
+		std::string				_password;
+		int						_serverFD;
+		struct pollfd			_fds[MAX_EVENTS];
+		int						_connections;
+		sockaddr_in				_hints;
+		std::map<int, Client>	_clients;
 
 	public:
 		Server();

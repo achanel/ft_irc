@@ -37,24 +37,23 @@ void	Server::start() {
 void	Server::stop() { g_status = false; }
 
 void	Server::initServer() {
-	sockaddr_in	hints;
 	// addrinfo*	res;
 	// addrinfo*	pointer;
 	int			optval = 1;
 
-	hints.sin_family = AF_INET;
-	hints.sin_port = htons(_port);
-	hints.sin_addr.s_addr = htonl(INADDR_ANY);
-	inet_pton(AF_INET, "127.0.0.1", &hints.sin_addr);
+	_hints.sin_family = AF_INET;
+	_hints.sin_port = htons(_port);
+	_hints.sin_addr.s_addr = htonl(INADDR_ANY);
+	inet_pton(AF_INET, "127.0.0.1", &_hints.sin_addr);
 	// memset(&hints, 0, sizeof(hints));
-	if ((_serverFD = socket(hints.sin_family, SOCK_STREAM, 0)) < 0) { // создаем конечную точку соединения (сокет)
+	if ((_serverFD = socket(_hints.sin_family, SOCK_STREAM, 0)) < 0) { // создаем конечную точку соединения (сокет)
 		error("Error: socket!");
 	}
 	if (setsockopt(_serverFD, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) < 0) { // устанавливаем флаг в сокете
 		// freeaddrinfo(res);
 		error("Error: setsockopt!");	
 	}
-	if (bind(_serverFD, (sockaddr *)&hints, sizeof(hints)) < 0) { // присваиваем сокету локальный адрес
+	if (bind(_serverFD, (sockaddr *)&_hints, sizeof(_hints)) < 0) { // присваиваем сокету локальный адрес
 		// freeaddrinfo(res);
 		error("Error: bind!");
 	}
@@ -103,12 +102,15 @@ void	Server::setNewConnection(size_t &i) {
 	// sockaddr	addr;
 	// socklen_t	addrlen;
 	// int			port;
+	char str[INET_ADDRSTRLEN];
 
 	g_status = true;
 	// memset(&addr, 0, sizeof(addr));
 	// addrlen = sizeof(addr);
 	_fds[_connections].fd = accept(_fds[i].fd, NULL, NULL); // принимаем соединение на сокете
-	std::cout << "New Connection!\n";
+	inet_ntop(AF_INET, &(_hints.sin_addr), str, INET_ADDRSTRLEN),
+	_clients[_fds[_connections].fd] = Client(_fds[_connections].fd, str, _password);
+	std::cout << "New client #" << _fds[_connections].fd << std::endl;
 	_fds[_connections].events = POLLIN;
 	_fds[_connections].revents = 0;
 	_connections = 1;
@@ -120,18 +122,26 @@ void	Server::setNewConnection(size_t &i) {
 
 void	Server::continueConnection(size_t &i) {
 	char buf[BUFFER_SIZE];
+	Client&	client = _clients[_fds[i].fd];
 	
 	g_status = true;
 	memset(buf, 0, BUFFER_SIZE);
-	int readed = read(_fds[i].fd, buf, BUFFER_SIZE);
+	int readed = read(_fds[_connections].fd, buf, BUFFER_SIZE);
 	_fds[i].revents = 0;
 	if (!readed) {
+		client.getBuffer().clear();
+		client.getBuffer().append("quit\r\n");
 		std::cout << "Disconnect\n";
 		_fds[i].fd = -1;
 		_connections = -1;
 	}
-	buf[readed] = 0;
-	std::cout << buf;
+	else
+		client.getBuffer().append(buf, readed);
+	// std::cout << std::string(client.getBuffer(), 0, readed) << std::endl;
+	// buf[readed] = 0;
+	// std::cout << buf;
+	send(_fds[i].fd, buf, readed + 1, 0);
+	write(_fds[_connections].fd, buf, strlen(buf));/// отправка сообщений между клиентами не работает
 	//исполняем команды клиента
 	_fds[i].revents = 0;
 }
