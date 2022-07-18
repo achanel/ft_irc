@@ -37,37 +37,18 @@ void	Server::start() {
 void	Server::stop() { g_status = false; }
 
 void	Server::initServer() {
-	// addrinfo*	res;
-	// addrinfo*	pointer;
 	int			optval = 1;
 
 	_hints.sin_family = AF_INET;
 	_hints.sin_port = htons(_port);
 	_hints.sin_addr.s_addr = htonl(INADDR_ANY);
 	inet_pton(AF_INET, "127.0.0.1", &_hints.sin_addr);
-	// memset(&hints, 0, sizeof(hints));
-	if ((_serverFD = socket(_hints.sin_family, SOCK_STREAM, 0)) < 0) { // создаем конечную точку соединения (сокет)
+	if ((_serverFD = socket(_hints.sin_family, SOCK_STREAM, 0)) < 0) // создаем конечную точку соединения (сокет)
 		error("Error: socket!");
-	}
-	if (setsockopt(_serverFD, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) < 0) { // устанавливаем флаг в сокете
-		// freeaddrinfo(res);
-		error("Error: setsockopt!");	
-	}
-	if (bind(_serverFD, (sockaddr *)&_hints, sizeof(_hints)) < 0) { // присваиваем сокету локальный адрес
-		// freeaddrinfo(res);
+	if (setsockopt(_serverFD, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) < 0) // устанавливаем флаг в сокете
+		error("Error: setsockopt!");
+	if (bind(_serverFD, (sockaddr *)&_hints, sizeof(_hints)) < 0) // присваиваем сокету локальный адрес
 		error("Error: bind!");
-	}
-
-	// if (getaddrinfo(NULL, std::to_string(_port).c_str(), &hints, &res) != 0) // создаем структуру адресов сокета сервера
-	// 	error("Error: getaddrinfo!");
-	// for (pointer = res; pointer != NULL; pointer = pointer->ai_next) {
-	// 	if (_serverFD > 0) {
-	// 		break ;
-	// 	}
-	// }
-	// freeaddrinfo(res);
-	// if (!pointer)
-	// 	error("Error: null socket!");
 	if (listen(_serverFD, SOMAXCONN) < 0) // слушаем соединение на сокете
 		error("Error: listen!");
 	_fds[0].fd = _serverFD;
@@ -98,15 +79,9 @@ void	Server::mainLoop(void) {
 }
 
 void	Server::setNewConnection(size_t &i) {
-	// std::string	address;
-	// sockaddr	addr;
-	// socklen_t	addrlen;
-	// int			port;
 	char str[INET_ADDRSTRLEN];
 
 	g_status = true;
-	// memset(&addr, 0, sizeof(addr));
-	// addrlen = sizeof(addr);
 	_fds[_connections].fd = accept(_fds[i].fd, NULL, NULL); // принимаем соединение на сокете
 	inet_ntop(AF_INET, &(_hints.sin_addr), str, INET_ADDRSTRLEN),
 	_clients[_fds[_connections].fd] = Client(_fds[_connections].fd, str, _password);
@@ -114,9 +89,6 @@ void	Server::setNewConnection(size_t &i) {
 	_fds[_connections].events = POLLIN;
 	_fds[_connections].revents = 0;
 	_connections = 1;
-	// address = inet_ntoa(((sockaddr_in*)&addr)->sin_addr);
-	// port = ntohs(((sockaddr_in*)&addr)->sin_port);
-	// _clients = Client(fd[i].fd, address, port);
 }
 
 
@@ -142,7 +114,7 @@ void	Server::continueConnection(size_t &i) {
 	// std::cout << buf;
 	send(_fds[i].fd, buf, readed + 1, 0);
 	write(_fds[_connections].fd, buf, strlen(buf));/// отправка сообщений между клиентами не работает
-	//исполняем команды клиента
+	//выполнение команд здесь
 	_fds[i].revents = 0;
 }
 

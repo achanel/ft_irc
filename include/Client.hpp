@@ -20,7 +20,7 @@ class Client
 		std::string	_nickname;
 		std::string	_password;
 		std::string	_username;
-		// std::list<>	_channels;
+		// std::list<>	_channels;???
 	
 	public:
 		int		getFd();
